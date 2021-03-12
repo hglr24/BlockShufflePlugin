@@ -1,9 +1,10 @@
 name: BlockShufflePlugin
-author: SulphurousC
+author: SulphurousC/hglr24
 description: An implementation of the BlockShuffle minigame
 commands:
   blockshuffle:
     description: BlockShuffle Main Command
     usage: "Usage : /blockshuffle [start][stop][info][add][remove][list][set [noOfRounds][RoundTime][foodAmount]]"
-version: 2.1
+version: 2.1.1
+api-version: 1.16
 main: com.sulphurouscerebrum.plugins.Main

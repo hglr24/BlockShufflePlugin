@@ -12,8 +12,8 @@ import java.util.List;
 @SuppressWarnings("NullableProblems")
 public class BlockShuffleTabCompleter implements TabCompleter {
 
-    Main plugin;
-    public BlockShuffleTabCompleter(Main plugin) {
+    private Main plugin;
+    BlockShuffleTabCompleter(Main plugin) {
         this.plugin = plugin;
     }
 
@@ -58,7 +58,9 @@ public class BlockShuffleTabCompleter implements TabCompleter {
 
             else if(args[0].equalsIgnoreCase("remove")) {
                 for(BlockShufflePlayer p : this.plugin.params.getAvailablePlayers()){
-                    list.add(p.getName());
+                    if (Bukkit.getPlayerExact(p.getName()) != null) {
+                        list.add(p.getName());
+                    }
                 }
 
                 for(String a : list) {

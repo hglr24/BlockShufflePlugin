@@ -8,6 +8,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.MapMeta;
+import org.bukkit.map.MapView;
 import org.bukkit.scheduler.BukkitTask;
 
 @SuppressWarnings("ALL")
@@ -78,15 +80,15 @@ public class BlockShuffleCommands implements CommandExecutor {
 }
 
 class BlockShuffleCommandsHelper {
-    Main plugin;
-    CommandSender sender;
+    private Main plugin;
+    private CommandSender sender;
 
-    public BlockShuffleCommandsHelper(Main plugin, CommandSender sender){
+    BlockShuffleCommandsHelper(Main plugin, CommandSender sender){
         this.plugin = plugin;
         this.sender = sender;
     }
 
-    public boolean startGame(){
+    boolean startGame(){
         if(this.plugin.params.getIsGameRunning()){
             this.sender.sendMessage("A Game is already running!");
             return true;
@@ -97,12 +99,26 @@ class BlockShuffleCommandsHelper {
             return true;
         }
 
+        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "recipe give @a *");
+
         for(BlockShufflePlayer player : this.plugin.params.getAvailablePlayers()) {
-            player.player.setHealth(player.player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getDefaultValue());
-            player.player.setFoodLevel(20);
-            player.player.setSaturation(5);
-            player.player.getInventory().clear();
-            player.player.getInventory().addItem(new ItemStack(Material.COOKED_PORKCHOP, this.plugin.params.getInitialFoodAmount()));
+            if (Bukkit.getPlayerExact(player.getName()) != null) {
+                player.player.setHealth(player.player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getDefaultValue());
+                player.player.setFoodLevel(20);
+                player.player.setSaturation(5);
+                player.player.getInventory().clear();
+                player.player.getInventory().addItem(new ItemStack(Material.COOKED_MUTTON, this.plugin.params.getInitialFoodAmount()));
+                player.player.getInventory().addItem(new ItemStack(Material.IRON_PICKAXE, 1));
+                player.player.getInventory().addItem(new ItemStack(Material.IRON_SHOVEL, 1));
+                player.player.getInventory().addItem(new ItemStack(Material.IRON_AXE, 1));
+                player.player.getInventory().addItem(new ItemStack(Material.CRAFTING_TABLE, 1));
+                player.player.getInventory().addItem(new ItemStack(Material.IRON_CHESTPLATE, 1));
+                player.player.getInventory().addItem(new ItemStack(Material.IRON_BOOTS, 1));
+                player.player.getInventory().addItem(new ItemStack(Material.IRON_LEGGINGS, 1));
+                player.player.getInventory().addItem(new ItemStack(Material.IRON_HELMET, 1));
+                player.player.getInventory().addItem(new ItemStack(Material.SHIELD, 1));
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "give @a minecraft:filled_map{map:3}");
+            }
         }
         BukkitTask task = new BlockShuffleTask(this.plugin).runTaskTimer(plugin, 0, 10);
         this.plugin.params.setTask(task);
@@ -111,14 +127,16 @@ class BlockShuffleCommandsHelper {
         return true;
     }
 
-    public boolean stopGame(){
+    boolean stopGame(){
         if(this.plugin.params.getIsGameRunning()) {
             this.sender.sendMessage("Stopping Game");
             Bukkit.getScheduler().cancelTask(this.plugin.params.getTask().getTaskId());
 
             for(BlockShufflePlayer player : this.plugin.params.getAvailablePlayers()) {
-                Player ply = Bukkit.getPlayer(player.getName());
-                ply.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+                if (Bukkit.getPlayerExact(player.getName()) != null) {
+                    Player ply = Bukkit.getPlayer(player.getName());
+                    ply.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+                }
             }
 
             this.plugin.params.setGameRunning(false);
@@ -129,14 +147,14 @@ class BlockShuffleCommandsHelper {
         return true;
     }
 
-    public boolean getInfo(){
+    boolean getInfo(){
         this.sender.sendMessage("No of Rounds : " + this.plugin.params.getNoOfRounds());
         this.sender.sendMessage("Round time : " + this.plugin.params.getRoundTime());
         this.sender.sendMessage("Initial Food Amount : " + this.plugin.params.getInitialFoodAmount());
         return true;
     }
 
-    public boolean addPlayer(String playerString) {
+    boolean addPlayer(String playerString) {
         if(this.plugin.params.getIsGameRunning()){
             sender.sendMessage("Cannot Add Players during game!");
             return true;
@@ -153,7 +171,7 @@ class BlockShuffleCommandsHelper {
         return true;
     }
 
-    public boolean removePlayer(String playerString){
+    boolean removePlayer(String playerString){
         if(this.plugin.params.getIsGameRunning()){
             sender.sendMessage("Cannot Remove Players during game!");
             return true;
@@ -164,7 +182,7 @@ class BlockShuffleCommandsHelper {
         return true;
     }
 
-    public boolean playerList(){
+    boolean playerList(){
 
         if(this.plugin.params.getAvailablePlayers().size() == 0){
             sender.sendMessage("No added players");
@@ -173,14 +191,16 @@ class BlockShuffleCommandsHelper {
         else {
             this.sender.sendMessage("The list of added players are : ");
             for (BlockShufflePlayer player : this.plugin.params.getAvailablePlayers()) {
-                this.sender.sendMessage(player.getName());
+                if (Bukkit.getPlayerExact(player.getName()) != null) {
+                    this.sender.sendMessage(player.getName());
+                }
             }
         }
 
         return true;
     }
 
-    public boolean setRounds(String numberOfRoundsString){
+    boolean setRounds(String numberOfRoundsString){
         int noOfRounds;
 
         try{
@@ -207,7 +227,7 @@ class BlockShuffleCommandsHelper {
         return true;
     }
 
-    public boolean setRoundTime(String roundTimeString) {
+    boolean setRoundTime(String roundTimeString) {
         int roundTime;
 
         try{
@@ -216,8 +236,8 @@ class BlockShuffleCommandsHelper {
             return false;
         }
 
-        if(roundTime < 600) {
-            this.sender.sendMessage("Round time cannot be less than 30 seconds!");
+        if(roundTime < 100) {
+            this.sender.sendMessage("Round time cannot be less than 5 seconds!");
         }
         else if(roundTime > 720000) {
             this.sender.sendMessage("Bruh. Get a life");
@@ -234,7 +254,7 @@ class BlockShuffleCommandsHelper {
         return true;
     }
 
-    public boolean setFoodAmount(String foodAmountString) {
+    boolean setFoodAmount(String foodAmountString) {
         int foodAmount;
 
         try{

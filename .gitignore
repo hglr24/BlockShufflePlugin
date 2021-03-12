@@ -1,4 +1,7 @@
 .settings
 .project
 .classpath
+.idea
 bin
+output/
+src/META-INF/
