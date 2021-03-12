@@ -1,14 +1,19 @@
 package com.sulphurouscerebrum.plugins;
 
+import org.apache.commons.math3.distribution.EnumeratedDistribution;
 import org.apache.commons.math3.util.Pair;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerEggThrowEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Score;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -103,5 +108,38 @@ public class Main extends JavaPlugin implements Listener {
                 player.setPlayer(joinedPlayer);
             }
         });
+    }
+
+    @EventHandler
+    public void onPlayerEggThrow(PlayerEggThrowEvent e) {
+        Player thrower = e.getPlayer();
+        this.params.getAvailablePlayers().forEach((player) -> {
+            if (player.player.getName().equals(thrower.getName())) {
+                player.setScore(player.getScore() - 40);
+                String oldScoreLabel = "YOUR BLOCK : " + player.getBlockToBeFound().toString()
+                        .replace("LEGACY_", "").replace("_", " ");
+                player.setBlockToBeFound(new EnumeratedDistribution<>(this.params.getAvailableBlocks()).sample());
+                new SendTitle().sendTitle(player.player, 5, 80, 5, ChatColor.YELLOW +
+                                "APPEAL!", ChatColor.BLUE + "New block: " +
+                        player.getBlockToBeFound().toString().replace("_", " "));
+                Bukkit.broadcastMessage(ChatColor.BLUE + player.getName() + ChatColor.DARK_RED + " APPEALED " +
+                        ChatColor.BLUE + "and is now assigned " +
+                        player.getBlockToBeFound().toString().replace("_", " "));
+                player.player.getScoreboard().resetScores(oldScoreLabel);
+                Score s5 = player.player.getScoreboard().getObjective("BSObjective")
+                        .getScore("YOUR BLOCK : " + player.getBlockToBeFound().toString()
+                        .replace("LEGACY_", "").replace("_", " "));
+                s5.setScore(6);
+                broadcastSound(Sound.ENTITY_LIGHTNING_BOLT_THUNDER);
+            }
+        });
+    }
+
+    private void broadcastSound(Sound sound) {
+        for(BlockShufflePlayer player : this.params.getAvailablePlayers()){
+            if (Bukkit.getPlayerExact(player.getName()) != null) {
+                player.player.playSound(player.player.getLocation(), sound, 1.0f, 1.0f);
+            }
+        }
     }
 }

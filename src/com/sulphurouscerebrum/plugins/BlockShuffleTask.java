@@ -8,6 +8,9 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerEggThrowEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -128,16 +131,16 @@ class BlockShuffleTaskHelper {
         this.currentRound = currentRound;
         for(BlockShufflePlayer player : this.plugin.params.getAvailablePlayers()){
             if (Bukkit.getPlayerExact(player.getName()) != null) {
-                Bukkit.getLogger().info("FOUND PLAYER, SENDING TITLE");
-                Bukkit.getLogger().info(player.player.toString());
                 player.setHasFoundBlock(false);
                 player.setBlockToBeFound(getRandomWeightedBlock());
-                new SendTitle().sendTitle(player.player, 5, 60, 5, ChatColor.YELLOW +
+                new SendTitle().sendTitle(player.player, 5, 80, 5, ChatColor.YELLOW +
                         "Find " + player.getBlockToBeFound().toString().replace("_", " "),
                         ChatColor.BLUE + "Good luck!");
                 Bukkit.broadcastMessage(ChatColor.BLUE + "Assigned " + player.getName() + " with " +
                         player.getBlockToBeFound().toString().replace("_", " "));
                 createBoard(player);
+                player.player.getInventory().remove(Material.EGG);
+                player.player.getInventory().addItem(new ItemStack(Material.EGG, 3));
             }
         }
     }
@@ -146,7 +149,7 @@ class BlockShuffleTaskHelper {
         return new EnumeratedDistribution<>(this.plugin.params.getAvailableBlocks()).sample();
     }
 
-    private void createBoard(BlockShufflePlayer player) {
+    void createBoard(BlockShufflePlayer player) {
         Bukkit.getLogger().info("Creating Scoreboard for " + player.getName());
         Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard();
         Objective obj = scoreboard.registerNewObjective("BSObjective", "dummy", "Psi U Block Shuffle");
